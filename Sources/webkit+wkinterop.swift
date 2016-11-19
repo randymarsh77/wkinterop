@@ -13,6 +13,6 @@ internal extension WKScriptMessage
 		let route = dict!["route"] as! String
 		let content = dict!["content"]
 		let kind = try MessageKind.FromString(dict!["kind"] as! String)
-		return Message(id: id, route: route, kind: kind, content: CastJObject(content))
+		return Message(id: id, route: route, kind: kind, content: WrapJObject(content))
 	}
 }

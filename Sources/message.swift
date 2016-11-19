@@ -47,7 +47,7 @@ internal struct Message
 			"id": id,
 			"route": route,
 			"kind": "event",
-			"content" : CastJObject(content),
+			"content" : UnwrapJObject(content),
 			] as [String : Any]
 		let data = try! JSONSerialization.data(withJSONObject: dictionary, options: JSONSerialization.WritingOptions(rawValue: 0))
 		return String(data: data, encoding: String.Encoding.utf8)!

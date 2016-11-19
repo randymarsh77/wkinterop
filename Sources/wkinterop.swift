@@ -19,7 +19,7 @@ public enum WebKitJObject
 	case Number(NSNumber)
 	case String(NSString)
 	case Date(NSDate)
-	case Null(NSNull)
+	case Null
 }
 
 public protocol WebKitJObjectSerializer
@@ -185,7 +185,7 @@ public class WKInterop : IDisposable
 			T.self == NSDate.self ||
 			T.self == NSString.self ||
 			T.self == NSNumber.self) {
-			return CastJObject(obj)
+			return WrapJObject(obj)
 		}
 
 		return try! _serializer.serialize(obj)
@@ -197,7 +197,7 @@ public class WKInterop : IDisposable
 			T.self == NSDate.self ||
 			T.self == NSString.self ||
 			T.self == NSNumber.self) {
-			return CastJObject(obj) as! T
+			return UnwrapJObject(obj) as! T
 		}
 		
 		return try! _serializer.deserialize(obj)

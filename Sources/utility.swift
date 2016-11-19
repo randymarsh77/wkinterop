@@ -1,9 +1,9 @@
 import Foundation
 
-internal func CastJObject(_ obj: Any?) -> WebKitJObject?
+internal func WrapJObject(_ obj: Any?) -> WebKitJObject
 {
 	if (obj == nil) {
-		return nil
+		return .Null
 	}
 
 	if (obj is NSDictionary) {
@@ -17,14 +17,14 @@ internal func CastJObject(_ obj: Any?) -> WebKitJObject?
 	} else if (obj is NSDate) {
 		return .Date(obj as! NSDate)
 	} else {
-		return nil
+		return .Null
 	}
 }
 
-internal func CastJObject(_ obj: WebKitJObject?) -> Any?
+internal func UnwrapJObject(_ obj: WebKitJObject?) -> Any
 {
 	if (obj == nil) {
-		return nil
+		return NSNull()
 	}
 
 	switch obj!
@@ -39,7 +39,7 @@ internal func CastJObject(_ obj: WebKitJObject?) -> Any?
 		return number
 	case .String(let string):
 		return string
-	case .Null(let null):
-		return null
+	case .Null:
+		return NSNull()
 	}
 }
