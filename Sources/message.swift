@@ -19,7 +19,7 @@ internal enum MessageKind
 		}
 	}
 
-	public func ToString() -> String {
+	public func toString() -> String {
 		switch self {
 		case .Event:
 			return "event"
@@ -46,7 +46,7 @@ internal struct Message
 		let dictionary = [
 			"id": id,
 			"route": route,
-			"kind": "event",
+			"kind": kind.toString(),
 			"content" : UnwrapJObject(content),
 			] as [String : Any]
 		let data = try! JSONSerialization.data(withJSONObject: dictionary, options: JSONSerialization.WritingOptions(rawValue: 0))
