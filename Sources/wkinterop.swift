@@ -70,8 +70,7 @@ public class WKInterop : IDisposable
 
 	public func registerEventHandler<T>(route: String, handler: @escaping (T) -> ()) -> Scope {
 		return registerHandler(Handler(route: route, onMessage: { m in
-			let content: T = try! self._serializer.deserialize(m.content!)
-			handler(content)
+			handler(self.deserialize(m.content!))
 		}))
 	}
 
@@ -86,7 +85,7 @@ public class WKInterop : IDisposable
 
 	public func registerRequestHandler<S, T>(route: String, handler: @escaping (S) -> (Task<T>)) -> Scope {
 		return registerHandler(Handler(route: route) { message in
-			let arg: S = try! self._serializer.deserialize(message.content!)
+			let arg: S = self.deserialize(message.content!)
 			let result = await (handler(arg))
 			DispatchQueue.main.async {
 				self.send(Message(id: message.id, route: route, kind: .Response, content: self.serialize(result)))
@@ -100,7 +99,7 @@ public class WKInterop : IDisposable
 			message.content = content
 			var result: T? = nil
 			let pending = PendingRequest(message, token) { r in
-				let deserialized: T = try! self._serializer.deserialize(r!)
+				let deserialized: T = self.deserialize(r!)
 				result = deserialized
 				Async.Wake(task)
 			}
