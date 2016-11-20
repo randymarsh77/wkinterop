@@ -1,6 +1,8 @@
 # wkinterop
 Swift plus JavaScript via WKWebView. You'll need the JS counterpart [wkinteropJS](https://github.com/randymarsh77/wkinteropJS), and can get that with `npm install wkinterop`.
 
+[![SPM](https://img.shields.io/badge/SPM-compatible-brightgreen.svg)](https://github.com/apple/swift-package-manager)
+
 ## Overview
 
 `WKWebView` provides an api for executing JS code, and recieving messages from JS running in the view's execution environment. However, any nontrivial amount of communication requires boiler plate interop code. Then, there are other considerations like asynchronousity and cancellation.
@@ -9,7 +11,7 @@ Swift plus JavaScript via WKWebView. You'll need the JS counterpart [wkinteropJS
 
 ## Usage
 
-Given that we have created a `WKWebView` and a `WKInterop` instance (see [Example](https://github.com/randymarsh77/wkinterop/readme#Exampe)), we can use the following apis...
+Given that we have created a `WKWebView` and a `WKInterop` instance (see [Example](#example)), we can use the following apis...
 
 From Swift,
 
@@ -35,7 +37,7 @@ See the [JS Readme](https://github.com/randymarsh77/wkinteropJS) for a more deta
 
 Communication with JS via `WKWebView` uses some standard `NS*` types for transferring object data. These types can be used directly, or you can tell `WKInterop` to use any Json serialization library you provide by implementing the `WebKitJObjectSerializer` protocol. I've implemented [GlossSerializer](https://github.com/randymarsh77/wkinterop-gloss) that uses [Gloss](https://github.com/hkellaway/Gloss) for this purpose.
 
-## Example
+## Example <a name="example"></a>
 
 Import useful things:
 ```
