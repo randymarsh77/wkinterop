@@ -2,6 +2,7 @@
 Swift plus JavaScript via WKWebView. You'll need the JS counterpart [wkinteropJS](https://github.com/randymarsh77/wkinteropJS), and can get that with `npm install wkinterop`.
 
 [![SPM](https://img.shields.io/badge/SPM-compatible-brightgreen.svg)](https://github.com/apple/swift-package-manager)
+[![license](https://img.shields.io/github/license/mashape/apistatus.svg)]()
 
 ## Overview
 
@@ -96,4 +97,4 @@ These are a few items I imagine I'll need to address in the near future.
 
 - CancellationTokens are completely ignored
 - Serialization for `Array<T>` or `Dictionary<S, T>` where `S` and `T` are custom types probably isn't going to work out so hot right now
-- Support for items listed in the JS Roadmap
+- Support for items listed in the [JS Roadmap](https://github.com/randymarsh77/wkinteropJS#roadmap)
