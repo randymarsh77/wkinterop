@@ -1,8 +1,9 @@
 # wkinterop
 Swift plus JavaScript via WKWebView. You'll need the JS counterpart [wkinteropJS](https://github.com/randymarsh77/wkinteropJS), and can get that with `npm install wkinterop`.
 
-[![SPM](https://img.shields.io/badge/SPM-compatible-brightgreen.svg)](https://github.com/apple/swift-package-manager)
 [![license](https://img.shields.io/github/license/mashape/apistatus.svg)]()
+[![SPM](https://img.shields.io/badge/SPM-compatible-brightgreen.svg)](https://github.com/apple/swift-package-manager)
+[![Build Status](https://api.travis-ci.org/randymarsh77/wkinterop.svg?branch=master)](https://travis-ci.org/randymarsh77/wkinterop)
 
 ## Overview
 
