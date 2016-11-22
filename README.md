@@ -4,6 +4,7 @@ Swift plus JavaScript via WKWebView. You'll need the JS counterpart [wkinteropJS
 [![license](https://img.shields.io/github/license/mashape/apistatus.svg)]()
 [![SPM](https://img.shields.io/badge/SPM-compatible-brightgreen.svg)](https://github.com/apple/swift-package-manager)
 [![Build Status](https://api.travis-ci.org/randymarsh77/wkinterop.svg?branch=master)](https://travis-ci.org/randymarsh77/wkinterop)
+[![codebeat badge](https://codebeat.co/badges/09a0ff65-91c9-48c7-be4a-a48ee1c9a269)](https://codebeat.co/projects/github-com-randymarsh77-wkinterop)
 
 ## Overview
 
