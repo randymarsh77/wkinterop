@@ -187,6 +187,9 @@ public class WKInterop : IDisposable
 			T.self == NSNumber.self) {
 			return WrapJObject(obj)
 		}
+		if (T.self == String.self) {
+			return WrapJObject(obj as! NSString)
+		}
 
 		return try! _serializer.serialize(obj)
 	}
