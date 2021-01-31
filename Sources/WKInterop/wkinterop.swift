@@ -118,7 +118,7 @@ public class WKInterop : IDisposable
 		}
 		return Scope {
 			synced(self) {
-				let i = self._handlers.index { h in handler === h }
+				let i = self._handlers.firstIndex { h in handler === h }
 				if (i != nil) {
 					self._handlers.remove(at: i!)
 				}

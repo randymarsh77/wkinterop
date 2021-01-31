@@ -1,0 +1,52 @@
+{
+  "object": {
+    "pins": [
+      {
+        "package": "Async",
+        "repositoryURL": "https://github.com/randymarsh77/async",
+        "state": {
+          "branch": "master",
+          "revision": "a72c45fd19d12c19b6994ffed49875938de85927",
+          "version": null
+        }
+      },
+      {
+        "package": "Cancellation",
+        "repositoryURL": "https://github.com/randymarsh77/cancellation",
+        "state": {
+          "branch": "master",
+          "revision": "480b35fc426e8d63502bc60b5cbd7e4fa6a860be",
+          "version": null
+        }
+      },
+      {
+        "package": "CAsync",
+        "repositoryURL": "https://github.com/randymarsh77/casync",
+        "state": {
+          "branch": "master",
+          "revision": "e1803caaadaf1e7442e222544aa7cbb5daa42b5b",
+          "version": null
+        }
+      },
+      {
+        "package": "IDisposable",
+        "repositoryURL": "https://github.com/randymarsh77/idisposable",
+        "state": {
+          "branch": "master",
+          "revision": "9d2d4c032fdca4d0d81ec191bfcc71c91e88b178",
+          "version": null
+        }
+      },
+      {
+        "package": "Scope",
+        "repositoryURL": "https://github.com/randymarsh77/scope",
+        "state": {
+          "branch": "master",
+          "revision": "3c797592601ba184e0b3efec6f3c9fba125a000c",
+          "version": null
+        }
+      }
+    ]
+  },
+  "version": 1
+}
