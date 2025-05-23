@@ -22,6 +22,10 @@ let package = Package(
 				.product(name: "IDisposable", package: "IDisposable"),
 				.product(name: "Scope", package: "Scope"),
 			]
-		)
+		),
+		.testTarget(
+			name: "WKInteropTests",
+			dependencies: ["WKInterop"]
+		),
 	]
 )
