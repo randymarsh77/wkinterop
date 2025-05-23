@@ -1,8 +1,12 @@
 import Foundation
-import WebKit
 import IDisposable
+import WebKit
 
-internal class GenericMessageHandler : WKUserContentController, WKScriptMessageHandler, IDisposable
+@available(iOS 13.0.0, *)
+@available(macOS 10.15.0, *)
+@MainActor
+internal class GenericMessageHandler: WKUserContentController, WKScriptMessageHandler,
+	IAsyncDisposable
 {
 	required override init() {
 		super.init()
@@ -12,20 +16,26 @@ internal class GenericMessageHandler : WKUserContentController, WKScriptMessageH
 		super.init(coder: aDecoder)
 	}
 
-	func dispose() {
+	func dispose() async {
 		self.removeAllUserScripts()
 	}
 
-	func attach(name: String, handler: @escaping (_: Message) -> ()) {
-		if (_onMessage != nil) { return }
+	func attach(name: String, handler: @escaping (_: Message) -> Void) {
+		if _onMessage != nil { return }
 		_onMessage = handler
 		self.add(self, name: name)
 	}
 
-	func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage)
-	{
-		_onMessage!(try! message.parse())
+	func userContentController(
+		_ userContentController: WKUserContentController, didReceive message: WKScriptMessage
+	) {
+		do {
+			let parsed = try message.parse()
+			_onMessage!(parsed)
+		} catch {
+			print("Error handling message: \(error)")
+		}
 	}
 
-	private var _onMessage: ((_: Message) -> ())?
+	private var _onMessage: ((_: Message) -> Void)?
 }

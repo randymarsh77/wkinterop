@@ -8,9 +8,9 @@ Swift plus JavaScript via WKWebView. You'll need the JS counterpart [wkinteropJS
 
 ## Overview
 
-`WKWebView` provides an api for executing JS code, and recieving messages from JS running in the view's execution environment. However, any nontrivial amount of communication requires boiler plate interop code. Then, there are other considerations like asynchronousity and cancellation.
+`WKWebView` provides an api for executing JS code, and receiving messages from JS running in the view's execution environment. However, any nontrivial amount of communication requires boiler plate interop code. Then, there are other considerations like asynchronousity and cancellation.
 
-`WKInterop` facilitates communication by providing an api to both Swift code, and JS code for publishing events and making asyncrhonous requests. Each execution environment can register to recieve events and process requests.
+`WKInterop` facilitates communication by providing an api to both Swift code, and JS code for publishing events and making asynchronous requests. Each execution environment can register to receive events and process requests.
 
 ## Usage
 
@@ -45,10 +45,7 @@ Communication with JS via `WKWebView` uses some standard `NS*` types for transfe
 Import useful things:
 ```
 import WebKit
-import Async
 import Cancellation
-import Gloss
-import GlossSerializer
 import WKInterop
 ```
 
@@ -91,7 +88,7 @@ _ = interop.registerRequestHandler(route: "example.route.js-makes-request") { ()
 
 JS is the most cross platform accessible language. However, you might not want to write important business logic in it. You might not be able to. But, you can still ship a consistent UI to any desktop or mobile platform, and even all of the above together with maximal code sharing. If that's what you want to do, then a good framework for communication interop is a must. `WKInterop` is still in it's early stages, but it aims to be good for this use case.
 
-Ok, so... cross platform, but... `WKWebView` and Swift? Alright, you got me. Platforms besides macOS and iOS would need a compatible reciever, and the JS library would need some additional abstraction and environment detection. The potential is there, but I'm starting out with some platform contraints.
+Ok, so... cross platform, but... `WKWebView` and Swift? Alright, you got me. Platforms besides macOS and iOS would need a compatible receiver, and the JS library would need some additional abstraction and environment detection. The potential is there, but I'm starting out with some platform constraints.
 
 ## Roadmap
 

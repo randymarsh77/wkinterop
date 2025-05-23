@@ -1,4 +1,4 @@
-// swift-tools-version:5.1
+// swift-tools-version:6.0
 import PackageDescription
 
 let package = Package(
@@ -7,18 +7,21 @@ let package = Package(
 		.library(
 			name: "WKInterop",
 			targets: ["WKInterop"]
-		),
+		)
 	],
 	dependencies: [
-		.package(url: "https://github.com/randymarsh77/async", .branch("master")),
-		.package(url: "https://github.com/randymarsh77/cancellation", .branch("master")),
-		.package(url: "https://github.com/randymarsh77/idisposable", .branch("master")),
-		.package(url: "https://github.com/randymarsh77/scope", .branch("master")),
+		.package(url: "https://github.com/randymarsh77/cancellation", branch: "master"),
+		.package(url: "https://github.com/randymarsh77/idisposable", branch: "master"),
+		.package(url: "https://github.com/randymarsh77/scope", branch: "master"),
 	],
 	targets: [
 		.target(
 			name: "WKInterop",
-			dependencies: ["Async", "Cancellation", "IDisposable", "Scope"]
-		),
+			dependencies: [
+				.product(name: "Cancellation", package: "Cancellation"),
+				.product(name: "IDisposable", package: "IDisposable"),
+				.product(name: "Scope", package: "Scope"),
+			]
+		)
 	]
 )

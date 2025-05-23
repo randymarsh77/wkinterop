@@ -1,9 +1,11 @@
-import Foundation
 import Cancellation
+import Foundation
 
-internal class PendingRequest
-{
-	init(_ message: Message, _ token: CancellationToken, _ onResponse: @escaping (WebKitJObject?) -> ()) {
+internal class PendingRequest {
+	init(
+		_ message: Message, _ token: CancellationToken,
+		_ onResponse: @escaping (WebKitJObject?) -> Void
+	) {
 		_token = token
 		_onResponse = onResponse
 		_message = message
@@ -18,5 +20,5 @@ internal class PendingRequest
 
 	private var _message: Message
 	private var _token: CancellationToken
-	private var _onResponse: (WebKitJObject?) -> ()
+	private var _onResponse: (WebKitJObject?) -> Void
 }

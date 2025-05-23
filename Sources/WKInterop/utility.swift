@@ -1,45 +1,43 @@
 import Foundation
 
-internal func WrapJObject(_ obj: Any?) -> WebKitJObject
-{
-	if (obj == nil) {
-		return .Null
+internal func wrapJObject(_ obj: Any?) -> WebKitJObject {
+	if obj == nil {
+		return .null
 	}
 
-	if (obj is NSDictionary) {
-		return .Dictionary(obj as! NSDictionary)
-	} else if (obj is NSArray) {
-		return .Array(obj as! NSArray)
-	} else if (obj is NSNumber) {
-		return .Number(obj as! NSNumber)
-	} else if (obj is NSString) {
-		return .String(obj as! NSString)
-	} else if (obj is NSDate) {
-		return .Date(obj as! NSDate)
+	if let dictionary = obj as? NSDictionary {
+		return .dictionary(dictionary)
+	} else if let array = obj as? NSArray {
+		return .array(array)
+	} else if let number = obj as? NSNumber {
+		return .number(number)
+	} else if let string = obj as? NSString {
+		return .string(string)
+	} else if let date = obj as? NSDate {
+		return .date(date)
 	} else {
-		return .Null
+		return .null
 	}
 }
 
-internal func UnwrapJObject(_ obj: WebKitJObject?) -> Any
-{
-	if (obj == nil) {
+internal func unwrapJObject(_ obj: WebKitJObject?) -> Any {
+	if obj == nil {
 		return NSNull()
 	}
 
 	switch obj!
 	{
-	case .Array(let array):
+	case .array(let array):
 		return array
-	case .Date(let date):
+	case .date(let date):
 		return date
-	case .Dictionary(let dictionary):
+	case .dictionary(let dictionary):
 		return dictionary
-	case .Number(let number):
+	case .number(let number):
 		return number
-	case .String(let string):
+	case .string(let string):
 		return string
-	case .Null:
+	case .null:
 		return NSNull()
 	}
 }
