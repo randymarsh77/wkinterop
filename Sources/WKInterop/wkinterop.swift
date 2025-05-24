@@ -73,6 +73,12 @@ public class WKInterop: IAsyncDisposable {
 		return registerHandler(Handler(route: route, onMessage: { _ in handler() }))
 	}
 
+	public func registerEventHandler(route: String, handler: @Sendable @escaping () async -> Void)
+		-> Scope
+	{
+		return registerHandler(Handler(route: route, onMessage: { _ in await handler() }))
+	}
+
 	public func registerEventHandler<T: Sendable>(
 		route: String, handler: @Sendable @escaping (T) -> Void
 	) -> Scope {
@@ -80,7 +86,20 @@ public class WKInterop: IAsyncDisposable {
 			Handler(
 				route: route,
 				onMessage: { m in
-					try await handler(self.deserialize(m.content!))
+					let data: T = try await self.deserialize(m.content!)
+					handler(data)
+				}))
+	}
+
+	public func registerEventHandler<T: Sendable>(
+		route: String, handler: @Sendable @escaping (T) async -> Void
+	) -> Scope {
+		return registerHandler(
+			Handler(
+				route: route,
+				onMessage: { m in
+					let data: T = try await self.deserialize(m.content!)
+					await handler(data)
 				}))
 	}
 
