@@ -10,18 +10,10 @@ public enum WKInteropError: Error {
 	case unsupportedSerialization
 }
 
-public enum WebKitJObject: @unchecked Sendable {
-	case dictionary(NSDictionary)
-	case array(NSArray)
-	case number(NSNumber)
-	case string(NSString)
-	case date(NSDate)
-	case null
-}
+public typealias SendableCodable = Sendable & Codable
 
-public protocol WebKitJObjectSerializer {
-	func serialize<T>(_ obj: T) throws -> WebKitJObject
-	func deserialize<T>(_ obj: WebKitJObject) throws -> T
+internal final class EmptyContent: SendableCodable {
+	public static let instance = EmptyContent()
 }
 
 @available(iOS 13.0.0, *)
@@ -31,9 +23,8 @@ public class WKInterop: IAsyncDisposable {
 	public var view: WKWebView { return _view }
 
 	public init(
-		serializer: WebKitJObjectSerializer, viewFactory: (_: WKWebViewConfiguration) -> WKWebView
+		viewFactory: (_: WKWebViewConfiguration) -> WKWebView
 	) {
-		_serializer = serializer
 		_messageHandler = GenericMessageHandler()
 		let config = WKWebViewConfiguration()
 		config.userContentController = _messageHandler
@@ -50,21 +41,24 @@ public class WKInterop: IAsyncDisposable {
 		await _messageHandler.dispose()
 	}
 
-	public func request<T>(route: String, token: CancellationToken) async throws -> T {
-		return try await makeRequest(route: route, content: nil, token: token)
+	public func request<TResponse: SendableCodable>(route: String, token: CancellationToken)
+		async throws -> TResponse
+	{
+		return try await makeRequest(route: route, content: EmptyContent(), token: token)
 	}
 
-	public func request<S, T>(route: String, content: S, token: CancellationToken) async throws -> T
-	{
-		return try await makeRequest(route: route, content: try serialize(content), token: token)
+	public func request<TRequest: SendableCodable, TResponse: SendableCodable>(
+		route: String, content: TRequest, token: CancellationToken
+	) async throws -> TResponse {
+		return try await makeRequest(route: route, content: content, token: token)
 	}
 
 	public func publish(route: String) throws {
-		try send(Message.from(route: route, kind: .event))
+		try send(createMessage(route: route, kind: .event))
 	}
 
-	public func publish<T>(route: String, content: T) throws {
-		try send(Message.from(route: route, kind: .event, content: serialize(content)))
+	public func publish<T: Encodable>(route: String, content: T) throws {
+		try send(createMessage(route: route, kind: .event, content: serialize(content)))
 	}
 
 	public func registerEventHandler(route: String, handler: @Sendable @escaping () -> Void)
@@ -79,70 +73,75 @@ public class WKInterop: IAsyncDisposable {
 		return registerHandler(Handler(route: route, onMessage: { _ in await handler() }))
 	}
 
-	public func registerEventHandler<T: Sendable>(
+	public func registerEventHandler<T: SendableCodable>(
 		route: String, handler: @Sendable @escaping (T) -> Void
 	) -> Scope {
 		return registerHandler(
 			Handler(
 				route: route,
 				onMessage: { m in
-					let data: T = try await self.deserialize(m.content!)
+					guard let data = m.content as? T else {
+						throw WKInteropError.unsupportedDeserialization
+					}
 					handler(data)
 				}))
 	}
 
-	public func registerEventHandler<T: Sendable>(
+	public func registerEventHandler<T: SendableCodable>(
 		route: String, handler: @Sendable @escaping (T) async -> Void
 	) -> Scope {
 		return registerHandler(
 			Handler(
 				route: route,
 				onMessage: { m in
-					let data: T = try await self.deserialize(m.content!)
+					guard let data = m.content as? T else {
+						throw WKInteropError.unsupportedDeserialization
+					}
 					await handler(data)
 				}))
 	}
 
-	public func registerRequestHandler<T>(
-		route: String, handler: @Sendable @escaping () async -> (T)
+	public func registerRequestHandler<T: SendableCodable>(
+		route: String, handler: @Sendable @escaping () async -> T
 	)
 		-> Scope
 	{
 		return registerHandler(
 			Handler(route: route) { message in
 				let result = await handler()
-				let serializedResult = try await self.serialize(result)
 				let message = Message(
 					id: message.id, route: route, kind: .response,
-					content: serializedResult)
+					content: result)
 				try await self.send(message)
 			})
 	}
 
-	public func registerRequestHandler<S: Sendable, T>(
-		route: String, handler: @Sendable @escaping (S) async -> (T)
+	public func registerRequestHandler<S: SendableCodable, T: SendableCodable>(
+		route: String, handler: @Sendable @escaping (S) async -> T
 	)
 		-> Scope
 	{
 		return registerHandler(
-			Handler(route: route) { message in
-				let arg: S = try await self.deserialize(message.content!)
+			Handler(route: route) { m in
+				guard let arg = m.content as? S else {
+					throw WKInteropError.unsupportedDeserialization
+				}
 				let result = await handler(arg)
-				let seriaizedResult = try await self.serialize(result)
 				let message = Message(
-					id: message.id, route: route, kind: .response,
-					content: seriaizedResult)
+					id: m.id, route: route, kind: .response,
+					content: result)
 				try await self.send(message)
 			})
 	}
 
-	private func makeRequest<T>(route: String, content: WebKitJObject?, token: CancellationToken)
-		async throws -> T
+	private func makeRequest<TRequest: SendableCodable, TResponse: SendableCodable>(
+		route: String, content: TRequest, token: CancellationToken
+	)
+		async throws -> TResponse
 	{
-		var message = Message.from(route: route, kind: .request)
-		message.content = content
-
-		let r = try await withCheckedThrowingContinuation { continuation in
+		let message = createMessage(
+			route: route, kind: .request, content: content)
+		let response = try await withCheckedThrowingContinuation { continuation in
 			let pending = PendingRequest(message, token) { r in
 				continuation.resume(returning: r)
 			}
@@ -154,11 +153,11 @@ public class WKInterop: IAsyncDisposable {
 			}
 		}
 
-		let deserialized: T = try deserialize(r!)
+		let deserialized: TResponse = try deserialize(response!)
 		return deserialized
 	}
 
-	private func registerHandler(_ handler: Handler) -> Scope {
+	private func registerHandler(_ handler: Handler<Data?>) -> Scope {
 		synced(self) {
 			_handlers.append(handler)
 		}
@@ -167,14 +166,14 @@ public class WKInterop: IAsyncDisposable {
 		}
 	}
 
-	private func removeHandler(_ handler: Handler) {
+	private func removeHandler(_ handler: Handler<Data?>) {
 		let i = self._handlers.firstIndex { h in handler === h }
 		if i != nil {
 			self._handlers.remove(at: i!)
 		}
 	}
 
-	private func send(_ message: Message) throws {
+	private func send<T>(_ message: Message<T>) throws {
 		let json = try message.toJsonString()
 		let function =
 			switch message.kind {
@@ -189,7 +188,7 @@ public class WKInterop: IAsyncDisposable {
 		_view.evaluateJavaScript("window.wkinterop.\(function)(\(json));") { (_, _) in }
 	}
 
-	private func handle(message: Message) async throws {
+	private func handle(message: Message<Data?>) async throws {
 		switch message.kind {
 		case .request:
 			handleIncoming(request: message)
@@ -200,7 +199,7 @@ public class WKInterop: IAsyncDisposable {
 		}
 	}
 
-	private func handleIncoming(request: Message) {
+	private func handleIncoming(request: Message<Data?>) {
 		let handler = _handlers.filter({ $0.route == request.route }).first
 		if handler == nil {
 			return
@@ -213,7 +212,7 @@ public class WKInterop: IAsyncDisposable {
 		}
 	}
 
-	private func handleIncoming(response: Message) {
+	private func handleIncoming(response: Message<Data?>) {
 		let pending = _requests.filter({ $0.message.id == response.id }).first
 		if pending != nil {
 			pending!.onResponse(response.content)
@@ -221,52 +220,26 @@ public class WKInterop: IAsyncDisposable {
 		}
 	}
 
-	private func handleIncoming(event: Message) async throws {
+	private func handleIncoming(event: Message<Data?>) async throws {
 		for handler in _handlers.filter({ $0.route == event.route }) {
 			try await handler.onMessage(event)
 		}
 	}
 
-	private func serialize<T>(_ obj: T) throws -> WebKitJObject? {
-		if T.self == NSDictionary.self || T.self == NSArray.self || T.self == NSDate.self
-			|| T.self == NSString.self || T.self == NSNumber.self
-		{
-			return wrapJObject(obj)
-		}
-		if T.self == String.self, let string = obj as? String {
-			return wrapJObject(string)
-		}
-
-		return try _serializer.serialize(obj)
-	}
-
-	private func deserialize<T>(_ obj: WebKitJObject) throws -> T {
-		if T.self == NSDictionary.self || T.self == NSArray.self || T.self == NSDate.self
-			|| T.self == NSString.self || T.self == NSNumber.self
-		{
-			if let t = unwrapJObject(obj) as? T {
-				return t
-			}
-		}
-
-		return try _serializer.deserialize(obj)
-	}
-
 	private var _requests = [PendingRequest]()
-	private var _handlers = [Handler]()
+	private var _handlers = [Handler<Data?>]()
 	private var _view: WKWebView
-	private var _serializer: WebKitJObjectSerializer
 	private var _messageHandler: GenericMessageHandler
 }
 
-private final class Handler: Sendable {
-	init(route: String, onMessage: @Sendable @escaping (Message) async throws -> Void) {
+private final class Handler<T: SendableCodable>: Sendable {
+	init(route: String, onMessage: @Sendable @escaping (Message<T>) async throws -> Void) {
 		self.route = route
 		self.onMessage = onMessage
 	}
 
 	public let route: String
-	public let onMessage: @Sendable (Message) async throws -> Void
+	public let onMessage: @Sendable (Message<T>) async throws -> Void
 }
 
 private func synced(_ lock: Any, _ closure: () -> Void) {

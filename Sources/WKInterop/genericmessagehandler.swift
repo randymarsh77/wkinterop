@@ -20,7 +20,7 @@ internal class GenericMessageHandler: WKUserContentController, WKScriptMessageHa
 		self.removeAllUserScripts()
 	}
 
-	func attach(name: String, handler: @escaping (_: Message) -> Void) {
+	func attach(name: String, handler: @escaping (_: Message<Data?>) -> Void) {
 		if _onMessage != nil { return }
 		_onMessage = handler
 		self.add(self, name: name)
@@ -37,5 +37,5 @@ internal class GenericMessageHandler: WKUserContentController, WKScriptMessageHa
 		}
 	}
 
-	private var _onMessage: ((_: Message) -> Void)?
+	private var _onMessage: ((_: Message<Data?>) -> Void)?
 }

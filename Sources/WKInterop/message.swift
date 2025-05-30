@@ -1,6 +1,6 @@
 import Foundation
 
-internal enum MessageKind {
+internal enum MessageKind: Codable {
 	case request
 	case response
 	case event
@@ -30,30 +30,30 @@ internal enum MessageKind {
 	}
 }
 
-internal struct Message: Sendable {
-	public static func from(route: String, kind: MessageKind) -> Message {
-		return Message(id: NSUUID().uuidString, route: route, kind: kind, content: nil)
-	}
+internal func createMessage(route: String, kind: MessageKind) -> Message<EmptyContent> {
+	return Message(id: NSUUID().uuidString, route: route, kind: kind, content: EmptyContent())
+}
 
-	public static func from(route: String, kind: MessageKind, content: WebKitJObject?) -> Message {
-		return Message(id: NSUUID().uuidString, route: route, kind: kind, content: content)
-	}
+internal func createMessage<T: Sendable>(route: String, kind: MessageKind, content: T) -> Message<T>
+{
+	return Message(id: NSUUID().uuidString, route: route, kind: kind, content: content)
+}
 
+internal protocol MessageBase: SendableCodable, Decodable {
+	var id: String { get }
+	var route: String { get }
+	var kind: MessageKind { get }
+}
+
+internal struct Message<T: SendableCodable>: MessageBase, SendableCodable {
 	public func toJsonString() throws -> String {
-		let dictionary =
-			[
-				"id": id,
-				"route": route,
-				"kind": kind.toString(),
-				"content": unwrapJObject(content),
-			] as [String: Any]
-		let data = try JSONSerialization.data(
-			withJSONObject: dictionary, options: JSONSerialization.WritingOptions(rawValue: 0))
+		let encoder = JSONEncoder()
+		let data = try encoder.encode(self)
 		return String(data: data, encoding: String.Encoding.utf8)!
 	}
 
 	var id: String
 	var route: String
 	var kind: MessageKind
-	var content: WebKitJObject?
+	var content: T
 }
