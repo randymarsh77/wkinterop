@@ -6,8 +6,9 @@ import WebKit
 public enum WKInteropError: Error {
 	case invalidMessage(String)
 	case invalidMessageKindString(String)
-	case unsupportedDeserialization
+	case unsupportedDeserialization(String)
 	case unsupportedSerialization
+	case missingData(String)
 }
 
 public typealias SendableCodable = Sendable & Codable
@@ -80,10 +81,11 @@ public class WKInterop: IAsyncDisposable {
 			Handler(
 				route: route,
 				onMessage: { m in
-					guard let data = m.content as? T else {
-						throw WKInteropError.unsupportedDeserialization
+					guard let data = m.content else {
+						throw WKInteropError.missingData("Route: '\(route)' requries data of type: '\(T.self)' but no data was provided")
 					}
-					handler(data)
+					let content: T = try deserialize(data)
+					handler(content)
 				}))
 	}
 
@@ -94,10 +96,11 @@ public class WKInterop: IAsyncDisposable {
 			Handler(
 				route: route,
 				onMessage: { m in
-					guard let data = m.content as? T else {
-						throw WKInteropError.unsupportedDeserialization
+					guard let data = m.content else {
+						throw WKInteropError.missingData("Route: '\(route)' requries data of type: '\(T.self)' but no data was provided")
 					}
-					await handler(data)
+					let content: T = try deserialize(data)
+					await handler(content)
 				}))
 	}
 
@@ -116,20 +119,21 @@ public class WKInterop: IAsyncDisposable {
 			})
 	}
 
-	public func registerRequestHandler<S: SendableCodable, T: SendableCodable>(
-		route: String, handler: @Sendable @escaping (S) async -> T
+	public func registerRequestHandler<TRequest: SendableCodable, TResponse: SendableCodable>(
+		route: String, handler: @Sendable @escaping (TRequest) async -> TResponse
 	)
 		-> Scope
 	{
 		return registerHandler(
 			Handler(route: route) { m in
-				guard let arg = m.content as? S else {
-					throw WKInteropError.unsupportedDeserialization
+				guard let data = m.content else {
+					throw WKInteropError.missingData("Request route: '\(route)' requires request of type: '\(TRequest.self)' but no request was provided")
 				}
-				let result = await handler(arg)
+				let request: TRequest = try deserialize(data)
+				let response = await handler(request)
 				let message = Message(
 					id: m.id, route: route, kind: .response,
-					content: result)
+					content: response)
 				try await self.send(message)
 			})
 	}
@@ -207,7 +211,11 @@ public class WKInterop: IAsyncDisposable {
 
 		DispatchQueue.global(qos: .default).async {
 			Task {
-				try await handler!.onMessage(request)
+				do {
+					try await handler!.onMessage(request)
+				} catch {
+					print("Error handling message: \(error)")
+				}
 			}
 		}
 	}

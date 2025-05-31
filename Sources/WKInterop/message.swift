@@ -49,7 +49,7 @@ internal struct Message<T: SendableCodable>: MessageBase, SendableCodable {
 	public static func fromJsonData(_ data: Data) throws -> Message<T> {
 		let decoder = JSONDecoder()
 		guard let dto = try? decoder.decode(MessageDto<T>.self, from: data) else {
-			throw WKInteropError.unsupportedDeserialization
+			throw WKInteropError.unsupportedDeserialization("")
 		}
 
 		let kind = try MessageKind.fromString(dto.kind)
