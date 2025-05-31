@@ -1,8 +1,9 @@
 import Foundation
 
 internal func serialize<T>(_ obj: T) throws -> Data where T: Encodable {
-	return try JSONSerialization.data(
-		withJSONObject: obj, options: JSONSerialization.WritingOptions(rawValue: 0))
+	let encoder = JSONEncoder()
+	let data = try encoder.encode(obj)
+	return data
 }
 
 internal func deserialize<T>(_ obj: Data) throws -> T where T: Decodable {

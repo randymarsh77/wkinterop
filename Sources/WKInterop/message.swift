@@ -58,6 +58,13 @@ internal struct Message<T: SendableCodable>: MessageBase, SendableCodable {
 	}
 	
 	public func toJsonString() throws -> String {
+		if let dataContent = content as? Data {
+			// Assume Data is json
+			guard let json = String(data: dataContent, encoding: .utf8) else {
+				throw WKInteropError.unsupportedSerialization
+			}
+			return "{\"id\":\"\(id)\",\"kind\":\"\(kind.toString())\",\"route\":\"\(route)\",\"content\":\(json)}"
+		}
 		let dto = MessageDto(id: id, route: route, kind: kind.toString(), content: content)
 		let encoder = JSONEncoder()
 		let data = try encoder.encode(dto)

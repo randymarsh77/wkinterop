@@ -2,7 +2,7 @@ import XCTest
 
 @testable import WKInterop
 
-struct TestContent: Codable {
+struct TestContent: Codable, Equatable {
 	let key: String
 	let value: Int
 }
@@ -77,5 +77,28 @@ class WKInteropTests: XCTestCase {
 		let decodedContent = try JSONDecoder().decode(TestContent.self, from: contentData)
 		XCTAssertEqual(decodedContent.key, content.key)
 		XCTAssertEqual(decodedContent.value, content.value)
+	}
+
+	func testOpaqueDataMessageRoundtrips() throws {
+		let content = TestContent(key: "testKey", value: 42)
+		let contentData = try serialize(content)
+
+		// Create a message with encodable content
+		let route = "test/route"
+		let kind = MessageKind.request
+		let opaqueMessage = Message(id: "1", route: route, kind: kind, content: contentData)
+		let message = Message(id: "1", route: route, kind: kind, content: content)
+
+		// Serialize the message to JSON string
+		let jsonString = try message.toJsonString()
+		let opaqueString = try opaqueMessage.toJsonString()
+
+		let specificMessageParsed = try Message<TestContent>.fromJsonData(jsonString.data(using: .utf8)!)
+		let opaqueMessageParsed = try Message<TestContent>.fromJsonData(opaqueString.data(using: .utf8)!)
+
+		XCTAssertEqual(specificMessageParsed.id, opaqueMessageParsed.id)
+		XCTAssertEqual(specificMessageParsed.kind, opaqueMessageParsed.kind)
+		XCTAssertEqual(specificMessageParsed.route, opaqueMessageParsed.route)
+		XCTAssertEqual(specificMessageParsed.content, opaqueMessageParsed.content)
 	}
 }
