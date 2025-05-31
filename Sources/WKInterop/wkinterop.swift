@@ -4,8 +4,8 @@ import Scope
 import WebKit
 
 public enum WKInteropError: Error {
-	case invalidMessage
-	case invalidMessageKindString
+	case invalidMessage(String)
+	case invalidMessageKindString(String)
 	case unsupportedDeserialization
 	case unsupportedSerialization
 }

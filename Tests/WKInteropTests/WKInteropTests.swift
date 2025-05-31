@@ -19,7 +19,7 @@ class WKInteropTests: XCTestCase {
 		let jsonData = jsonString.data(using: .utf8)!
 
 		// Test deserialize method
-		let m1: Message<EmptyContent> = try deserialize(jsonData)
+		let m1: Message<EmptyContent> = try Message<EmptyContent>.fromJsonData(jsonData)
 
 		XCTAssertEqual(m1.route, route)
 		XCTAssertEqual(m1.kind, kind)

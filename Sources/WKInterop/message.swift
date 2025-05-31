@@ -14,7 +14,7 @@ internal enum MessageKind: Codable {
 		case "response":
 			return .response
 		default:
-			throw WKInteropError.invalidMessageKindString
+			throw WKInteropError.invalidMessageKindString("Received: '\(string)' but must be one of 'event', 'request', or 'response'")
 		}
 	}
 
@@ -46,14 +46,33 @@ internal protocol MessageBase: SendableCodable, Decodable {
 }
 
 internal struct Message<T: SendableCodable>: MessageBase, SendableCodable {
+	public static func fromJsonData(_ data: Data) throws -> Message<T> {
+		let decoder = JSONDecoder()
+		guard let dto = try? decoder.decode(MessageDto<T>.self, from: data) else {
+			throw WKInteropError.unsupportedDeserialization
+		}
+
+		let kind = try MessageKind.fromString(dto.kind)
+
+		return Message(id: dto.id, route: dto.route, kind: kind, content: dto.content)
+	}
+	
 	public func toJsonString() throws -> String {
+		let dto = MessageDto(id: id, route: route, kind: kind.toString(), content: content)
 		let encoder = JSONEncoder()
-		let data = try encoder.encode(self)
+		let data = try encoder.encode(dto)
 		return String(data: data, encoding: String.Encoding.utf8)!
 	}
 
 	var id: String
 	var route: String
 	var kind: MessageKind
+	var content: T
+}
+
+private struct MessageDto<T: SendableCodable>: SendableCodable {
+	var id: String
+	var route: String
+	var kind: String
 	var content: T
 }

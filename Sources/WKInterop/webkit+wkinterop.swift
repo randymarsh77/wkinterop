@@ -19,23 +19,15 @@ func convertContentToData(_ maybeContent: Any?) throws -> Data? {
 
 internal func parseWKMessage(_ dictionary: NSDictionary) throws -> Message<Data?> {
 	guard let id = dictionary["id"] as? String else {
-		throw WKInteropError.invalidMessage
+		throw WKInteropError.invalidMessage("Invalid or missing key: 'id'")
 	}
 
 	guard let route = dictionary["route"] as? String else {
-		throw WKInteropError.invalidMessage
+		throw WKInteropError.invalidMessage("Invalid or missing key: 'route'")
 	}
 
-	guard let kindDictionary = dictionary["kind"] as? [String: Any] else {
-		throw WKInteropError.invalidMessage
-	}
-
-	guard kindDictionary.keys.count == 1 else {
-		throw WKInteropError.invalidMessage
-	}
-
-	guard let kindString = kindDictionary.keys.first else {
-		throw WKInteropError.invalidMessage
+	guard let kindString = dictionary["kind"] as? String else {
+		throw WKInteropError.invalidMessage("Invalid or missing key: 'kind'")
 	}
 
 	let kind = try MessageKind.fromString(kindString)
@@ -49,7 +41,7 @@ extension WKScriptMessage {
 	func parse() throws -> Message<Data?> {
 		let dict = self.body as? NSDictionary
 		if dict == nil {
-			throw WKInteropError.invalidMessage
+			throw WKInteropError.invalidMessage("Script message body must be a dictionary")
 		}
 
 		return try parseWKMessage(dict!)
