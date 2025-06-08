@@ -26,23 +26,27 @@ public class WKInterop: IAsyncDisposable {
 	public init(
 		viewFactory: (_: WKWebViewConfiguration) -> WKWebView
 	) {
-		_messageHandler = GenericMessageHandler()
+		let messageHandler = GenericMessageHandler()
 		let config = WKWebViewConfiguration()
-		config.userContentController = _messageHandler
+		config.userContentController = messageHandler
 
 		_view = viewFactory(config)
-		_messageHandler.attach(name: "wkinterop") { message in
+		messageHandler.attach(name: "wkinterop") { message in
 			Task {
 				try await self.handle(message: message)
 			}
 		}
+		_messageHandler = messageHandler
 	}
 
 	public func dispose() async {
-		await _messageHandler.dispose()
+		if let messageHandler = _messageHandler {
+			await messageHandler.dispose()
+		}
+		_messageHandler = nil
+		_view = nil
 		_handlers.removeAll()
 		_requests.removeAll()
-		_view = nil
 	}
 
 	public func request<TResponse: SendableCodable>(route: String, token: CancellationToken)
@@ -244,7 +248,7 @@ public class WKInterop: IAsyncDisposable {
 	private var _requests = [PendingRequest]()
 	private var _handlers = [Handler<Data?>]()
 	private var _view: WKWebView?
-	private var _messageHandler: GenericMessageHandler
+	private var _messageHandler: GenericMessageHandler?
 }
 
 private final class Handler<T: SendableCodable>: Sendable {

@@ -17,12 +17,15 @@ internal class GenericMessageHandler: WKUserContentController, WKScriptMessageHa
 	}
 
 	func dispose() async {
-		self.removeAllUserScripts()
+		if let name = _attachedName {
+			self.removeScriptMessageHandler(forName: name )
+		}
 		_onMessage = nil
 	}
 
 	func attach(name: String, handler: @escaping (_: Message<Data?>) -> Void) {
 		if _onMessage != nil { return }
+		_attachedName = name
 		_onMessage = handler
 		self.add(self, name: name)
 	}
@@ -32,11 +35,14 @@ internal class GenericMessageHandler: WKUserContentController, WKScriptMessageHa
 	) {
 		do {
 			let parsed = try message.parse()
-			_onMessage!(parsed)
+			if let onMessage = _onMessage {
+				onMessage(parsed)
+			}
 		} catch {
 			print("Error handling message: \(error)")
 		}
 	}
 
 	private var _onMessage: ((_: Message<Data?>) -> Void)?
+	private var _attachedName: String?
 }
