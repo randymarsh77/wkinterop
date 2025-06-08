@@ -21,7 +21,7 @@ internal final class EmptyContent: SendableCodable {
 @available(macOS 10.15.0, *)
 @MainActor
 public class WKInterop: IAsyncDisposable {
-	public var view: WKWebView { return _view }
+	public var view: WKWebView? { return _view }
 
 	public init(
 		viewFactory: (_: WKWebViewConfiguration) -> WKWebView
@@ -40,6 +40,9 @@ public class WKInterop: IAsyncDisposable {
 
 	public func dispose() async {
 		await _messageHandler.dispose()
+		_handlers.removeAll()
+		_requests.removeAll()
+		_view = nil
 	}
 
 	public func request<TResponse: SendableCodable>(route: String, token: CancellationToken)
@@ -189,7 +192,11 @@ public class WKInterop: IAsyncDisposable {
 				"_handleResponse"
 			}
 
-		_view.evaluateJavaScript("window.wkinterop.\(function)(\(json));") { (_, _) in }
+		guard let view = _view else {
+			throw ObjectDisposedException.objectDisposed
+		}
+
+		view.evaluateJavaScript("window.wkinterop.\(function)(\(json));") { (_, _) in }
 	}
 
 	private func handle(message: Message<Data?>) async throws {
@@ -236,7 +243,7 @@ public class WKInterop: IAsyncDisposable {
 
 	private var _requests = [PendingRequest]()
 	private var _handlers = [Handler<Data?>]()
-	private var _view: WKWebView
+	private var _view: WKWebView?
 	private var _messageHandler: GenericMessageHandler
 }
 

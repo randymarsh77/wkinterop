@@ -18,6 +18,7 @@ internal class GenericMessageHandler: WKUserContentController, WKScriptMessageHa
 
 	func dispose() async {
 		self.removeAllUserScripts()
+		_onMessage = nil
 	}
 
 	func attach(name: String, handler: @escaping (_: Message<Data?>) -> Void) {
